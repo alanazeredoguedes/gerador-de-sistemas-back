@@ -15,6 +15,8 @@ class DefaultAbstractController extends AbstractController
     ) {}
 
     public function getMediaUrl($media) {
+        if(!$media)
+            return null;
 
         $url = [];
 

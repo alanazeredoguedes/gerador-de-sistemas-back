@@ -14,8 +14,8 @@ class ApiAccessDeniedHandler implements AccessDeniedHandlerInterface
 
         return new JsonResponse([
             "code" => 403,
-            #"message"=> "Sem Permissão de Acesso ao Recurso",
-            "message"=> "Access Denied for Resource",
+            "message"=> "Sem Permissão para acessar o Recurso",
+            #"message"=> "Access Denied for Resource",
         ], 403);
 
     }

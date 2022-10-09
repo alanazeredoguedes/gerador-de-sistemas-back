@@ -76,7 +76,7 @@ class UserApiController extends DefaultAbstractController
         //$passwordHasher->hashPassword();
 
         if(!$user || !$passwordHasher->isPasswordValid($user, $requestBody->password))
-            return $this->createResponseStatus(message: 'Invalid access credentials');
+            return $this->createResponseStatus(message: 'Credenciais Invalidas');
 
         $token = $this->JWTManager->create($user);
 

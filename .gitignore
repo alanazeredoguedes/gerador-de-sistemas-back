@@ -20,6 +20,9 @@
 ./config/jwt/public.pem
 ###> jwt/keys ###
 
+public/upload
+public/uploads
+public/bundles
 
 .idea
 

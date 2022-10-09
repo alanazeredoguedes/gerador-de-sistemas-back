@@ -4,10 +4,7 @@ namespace App\Controller;
 
 use App\Application\Project\ContentBundle\Attributes\ARR;
 use App\Application\Project\ContentBundle\Controller\DefaultAbstractController;
-use App\Entity\ProgrammingLanguage;
-use Sonata\MediaBundle\Provider\Pool;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use App\Entity\Diagram;
 use App\Application\Project\UserBundle\Entity\User;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -26,15 +23,15 @@ use Symfony\Component\Serializer\Serializer;
 
 
 ##[IsGranted('IS_AUTHENTICATED_FULLY')]
-#[OA\Tag(name: 'Programming Language')]
-#[ARR(groupName: 'Linguagem de Programação', description: 'Permissões Api do modulo de Linguagem de Programação')]
-#[Route('/api/programmingLanguage', name: 'api_programming_language_')]
-class ProgrammingLanguageApiController extends DefaultAbstractController
+#[OA\Tag(name: 'Diagram')]
+#[ARR(groupName: 'Diagrama', description: 'Permissões Api do modulo Diagrama')]
+#[Route('/api/diagram', name: 'api_diagram_')]
+class DiagramApiController extends DefaultAbstractController
 {
 
     private function getRepository(): string
     {
-        return ProgrammingLanguage::class;
+        return Diagram::class;
     }
 
     /** @throws ExceptionInterface */
@@ -46,55 +43,33 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
                 new OA\Property(property: 'id', type: 'int'),
                 new OA\Property(property: 'name', type: 'string'),
                 new OA\Property(property: 'description', type: 'string'),
-                new OA\Property(property: 'active', type: 'boolean'),
-                new OA\Property(property: 'logo', type: 'object'),
+                new OA\Property(property: 'structure', type: 'string'),
             ],
             type: 'object'
         )
     )]
-    #[ARR(routerName: 'listAction', role: "ROLE_API_PROGRAMMING_LANGUAGE_LIST", title: 'Listar')]
+    #[ARR(routerName: 'listAction', role: "ROLE_API_DIAGRAM_LIST", title: 'Listar')]
     #[Route('', name: 'list', methods: ['GET'])]
     public function listAction(ManagerRegistry $doctrine): Response
     {
-        //$this->validateAccess("ROLE_API_PROGRAMMING_LANGUAGE_LIST");
+        $this->validateAccess("ROLE_API_DIAGRAM_LIST");
         $objectData = $doctrine->getRepository( $this->getRepository() )->findAll();
 
+        $serializer = new Serializer([new ObjectNormalizer()]);
+        $response = $serializer->normalize($objectData, null, [
+            AbstractNormalizer::ATTRIBUTES => [
+                'id',
+                'name',
+                'description',
+                'structure',
+            ],
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'user',
+                'application'
+            ]
+        ]);
 
-        $responseData = [];
-        foreach ($objectData as $data){
-            $serializer = new Serializer([new ObjectNormalizer()]);
-            $dataSerialize = $serializer->normalize($data, null, [
-                AbstractNormalizer::ATTRIBUTES => [
-                    'id',
-                    'name',
-                    'description',
-                    'active',
-                    'framework' => [
-                        'id',
-                        'name'
-                    ],
-                    'logo' => [
-                        'id',
-                    ]
-                ],
-                AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                    //'logo'
-                ]
-            ]);
-            $dataSerialize['logo'] = $this->getMediaUrl($data->getLogo());
-
-
-            $responseData[] = $dataSerialize;
-
-
-        }
-
-
-
-
-        //$this->getMediaUrl();
-
-        return $this->json($responseData);
+        return $this->json($response);
     }
 
     #[OA\RequestBody(
@@ -103,23 +78,23 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
             properties: [
                 new OA\Property(property: 'name', type: 'string', nullable: false),
                 new OA\Property(property: 'description', type: 'string', nullable: false),
-                new OA\Property(property: 'active',  type: 'boolean', nullable: false),
+                new OA\Property(property: 'structure',  type: 'string', nullable: false),
             ],
             type: 'object'
         )
     )]
     #[Route('', name: 'create', methods: ['POST'])]
-    #[ARR(routerName: 'createAction', role: "ROLE_API_PROGRAMMING_LANGUAGE_CREATE", title: 'Criar')]
+    #[ARR(routerName: 'createAction', role: "ROLE_API_DIAGRAM_CREATE", title: 'Criar')]
     public function createAction(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response
     {
-        //$this->validateAccess("ROLE_API_PROGRAMMING_LANGUAGE_CREATE");
+        //$this->validateAccess("ROLE_API_DIAGRAM_CREATE");
 
         $entityManager = $doctrine->getManager();
 
         $parameters = [
             'name'         => [ 'type' => 'string', 'required' => true, 'nullable' => false ],
             'description'  => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
-            'active'       => [ 'type' => 'boolean', 'required' => false, 'nullable' => false ],
+            'structure'    => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
         ];
 
         $requestBody = json_decode($request->getContent());
@@ -128,7 +103,7 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
             return $this->validateJsonRequestBody($requestBody, $parameters);
 
 
-        $data = new ProgrammingLanguage();
+        $data = new Diagram();
 
         if(property_exists($requestBody, 'name'))
             $data->setName($requestBody->name);
@@ -136,8 +111,8 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
         if(property_exists($requestBody, 'description'))
             $data->setDescription($requestBody->description);
 
-        if(property_exists($requestBody, 'active'))
-            $data->setActive($requestBody->active);
+        if(property_exists($requestBody, 'structure'))
+            $data->setStructure($requestBody->structure);
 
 
         $entityManager->persist($data);
@@ -145,7 +120,7 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
 
         return $this->json([
             'status' => true,
-            'message' => 'Created new { Programming Language } successfully with id ' . $data->getId(),
+            'message' => 'Created new { Diagram } successfully with id ' . $data->getId(),
         ]);
     }
 
@@ -165,17 +140,17 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
         )
     )]
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    #[ARR(routerName: 'showAction', role: "ROLE_API_PROGRAMMING_LANGUAGE_SHOW", title: 'Visualizar')]
+    #[ARR(routerName: 'showAction', role: "ROLE_API_DIAGRAM_SHOW", title: 'Visualizar')]
     public function showAction(ManagerRegistry $doctrine, int $id): Response
     {
-        //$this->validateAccess("ROLE_API_PROGRAMMING_LANGUAGE_SHOW");
+        //$this->validateAccess("ROLE_API_DIAGRAM_SHOW");
 
         $objectData = $doctrine->getRepository($this->getRepository())->find($id);
 
         if (!$objectData)
             return $this->json([
                 'status' => false,
-                'message' => 'Not found { Programming Language } with id ' . $id,
+                'message' => "Diagrama não encontrado.",
             ], 404);
 
         $serializer = new Serializer([new ObjectNormalizer()]);
@@ -184,14 +159,7 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
                 'id',
                 'name',
                 'description',
-                'active',
-                'logo' => [
-                    'id',
-                    'name',
-                    'description',
-                    'providerReference',
-                    'contentType',
-                ]
+                'structure',
             ],
             AbstractNormalizer::IGNORED_ATTRIBUTES => [
                 'logo'
@@ -206,39 +174,56 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
         description: 'Json Payload',
         content: new OA\JsonContent(
             properties: [
-                new OA\Property(property: 'name', type: 'string', nullable: false,),
+                new OA\Property(property: 'name', type: 'string', nullable: false),
                 new OA\Property(property: 'description', type: 'string', nullable: false),
-                new OA\Property(property: 'active',  type: 'boolean', nullable: false),
+                new OA\Property(property: 'structure',  type: 'string', nullable: false),
             ],
             type: 'object'
         )
     )]
     #[Route('/{id}', name: 'edit', methods: ['PUT'])]
-    #[ARR(routerName: 'editAction', role: "ROLE_API_PROGRAMMING_LANGUAGE_EDIT", title: 'Editar')]
+    #[ARR(routerName: 'editAction', role: "ROLE_API_DIAGRAM_EDIT", title: 'Editar')]
     public function editAction(ManagerRegistry $doctrine, Request $request, int $id): Response
     {
         $entityManager = $doctrine->getManager();
-        $user = $entityManager->getRepository(User::class)->find($id);
 
-        if (!$user) {
-            return $this->json('No user found for id' . $id, 404);
-        }
+        $parameters = [
+            'name'         => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
+            'description'  => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
+            'structure'    => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
+        ];
 
-        $decoded = json_decode($request->getContent());
-        $username = $decoded->username;
-        $email = $decoded->email;
+        $requestBody = json_decode($request->getContent());
 
-        $user->setUsername($username);
-        $user->setEmail($email);
+        if($this->validateJsonRequestBody($requestBody, $parameters))
+            return $this->validateJsonRequestBody($requestBody, $parameters);
 
-        $entityManager->persist($user);
+
+        $data = $entityManager->getRepository(Diagram::class)->find($id);
+
+        if (!$data)
+            return $this->json('No Diagram found for id' . $id, 404);
+
+
+        if(property_exists($requestBody, 'name'))
+            $data->setName($requestBody->name);
+
+        if(property_exists($requestBody, 'description'))
+            $data->setDescription($requestBody->description);
+
+        if(property_exists($requestBody, 'structure'))
+            $data->setStructure($requestBody->structure);
+
+
+        $entityManager->persist($data);
         $entityManager->flush();
 
         $data = [
-            'id' => $user->getId(),
-            'username' => $user->getUsername(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
+
+            'id' => $data->getId(),
+            'name' => $data->getName(),
+            'description' => $data->getDescription(),
+            'structure' => $data->getStructure(),
         ];
 
         return $this->json($data);
@@ -246,26 +231,38 @@ class ProgrammingLanguageApiController extends DefaultAbstractController
 
 
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
-    #[ARR(routerName: 'deleteAction', role: "ROLE_API_PROGRAMMING_LANGUAGE_DELETE", title: 'Deletar')]
+    #[ARR(routerName: 'deleteAction', role: "ROLE_API_DIAGRAM_DELETE", title: 'Deletar')]
     public function deleteAction(ManagerRegistry $doctrine, int $id): Response
     {
-        //$this->validateAccess("ROLE_API_PROGRAMMING_LANGUAGE_DELETE");
+        //$this->validateAccess("ROLE_API_DIAGRAM_DELETE");
 
         $entityManager = $doctrine->getManager();
+
         $data = $entityManager->getRepository($this->getRepository())->find($id);
 
+        /** Verifica se o diagrama existe */
         if (!$data)
             return $this->json([
                 'status' => false,
-                'message' => 'Error on Deleted { Programming Language } with id ' . $id,
+                'message' => 'Error on Deleted { Diagram } with id ' . $id,
             ], 404);
+
+        /** Verifica se existem aplicações vinculadas ao diagrama */
+        $aplicacoes = count($data->getApplication());
+
+        if($aplicacoes)
+            return $this->json([
+                'status' => false,
+                'message' => "Existem aplicações vinculadas a este diagrama.",
+            ], 404);
+
 
         $entityManager->remove($data);
         $entityManager->flush();
 
         return $this->json([
             'status' => true,
-            'message' => 'Deleted { Programming Language } successfully with id ' . $id,
+            'message' => 'Diagrama removido com sucesso ',
         ]);
     }
 
