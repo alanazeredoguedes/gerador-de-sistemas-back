@@ -53,7 +53,11 @@ class DiagramApiController extends DefaultAbstractController
     public function listAction(ManagerRegistry $doctrine): Response
     {
         $this->validateAccess("ROLE_API_DIAGRAM_LIST");
-        $objectData = $doctrine->getRepository( $this->getRepository() )->findAll();
+
+        $user = $this->getUser();
+
+
+        $objectData = $doctrine->getRepository( $this->getRepository() )->findBy(['user' => $user]);
 
         $serializer = new Serializer([new ObjectNormalizer()]);
         $response = $serializer->normalize($objectData, null, [
@@ -87,7 +91,9 @@ class DiagramApiController extends DefaultAbstractController
     #[ARR(routerName: 'createAction', role: "ROLE_API_DIAGRAM_CREATE", title: 'Criar')]
     public function createAction(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response
     {
-        //$this->validateAccess("ROLE_API_DIAGRAM_CREATE");
+        $this->validateAccess("ROLE_API_DIAGRAM_CREATE");
+
+        $user = $this->getUser();
 
         $entityManager = $doctrine->getManager();
 
@@ -114,6 +120,8 @@ class DiagramApiController extends DefaultAbstractController
         if(property_exists($requestBody, 'structure'))
             $data->setStructure($requestBody->structure);
 
+
+        $data->setUser($user);
 
         $entityManager->persist($data);
         $entityManager->flush();
@@ -143,9 +151,10 @@ class DiagramApiController extends DefaultAbstractController
     #[ARR(routerName: 'showAction', role: "ROLE_API_DIAGRAM_SHOW", title: 'Visualizar')]
     public function showAction(ManagerRegistry $doctrine, int $id): Response
     {
-        //$this->validateAccess("ROLE_API_DIAGRAM_SHOW");
+        $this->validateAccess("ROLE_API_DIAGRAM_SHOW");
+        $user = $this->getUser();
 
-        $objectData = $doctrine->getRepository($this->getRepository())->find($id);
+        $objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => $user]);
 
         if (!$objectData)
             return $this->json([

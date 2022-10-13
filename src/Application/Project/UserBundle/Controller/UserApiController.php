@@ -4,6 +4,7 @@ namespace App\Application\Project\UserBundle\Controller;
 
 use App\Application\Project\ContentBundle\Attributes\ARR;
 use App\Application\Project\ContentBundle\Controller\DefaultAbstractController;
+use App\Application\Project\UserBundle\Entity\Group;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use App\Application\Project\UserBundle\Entity\User;
@@ -148,7 +149,6 @@ class UserApiController extends DefaultAbstractController
     {
         $users = $doctrine->getRepository(User::class)->findAll();
 
-
         $serializer = new Serializer([new ObjectNormalizer()]);
         $data = $serializer->normalize($users, null, [AbstractNormalizer::ATTRIBUTES => [
             'id',
@@ -161,34 +161,65 @@ class UserApiController extends DefaultAbstractController
     }
 
     #[OA\Tag(name: 'user')]
-    #[Route('/user', name: 'user_create', methods: ['POST'])]
-    #[OA\Response(
-        response: 200,
-        description: 'Create a new User',
-        content: new Model(type: User::class)
+    #[OA\RequestBody(
+        description: 'Json Payload',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'username', type: 'string', nullable: false),
+                new OA\Property(property: 'email',  type: 'string', nullable: false),
+                new OA\Property(property: 'password', type: 'string', nullable: false)
+            ],
+            type: 'object'
+        )
     )]
-    #[OA\RequestBody()]
-    #[IsGranted('ROLE_API_USER_CREATE')]
+    #[Route('/user', name: 'user_create', methods: ['POST'])]
     #[ARR(routerName: 'createAction', role: "ROLE_API_USER_CREATE", title: 'Criar')]
     public function createAction(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response
     {
         $entityManager = $doctrine->getManager();
 
-        $decoded = json_decode($request->getContent());
-        $username = $decoded->username;
-        $email = $decoded->email;
-        $plaintextPassword = $decoded->password;
+        $parameters = [
+            'username'     => [ 'type' => 'string', 'required' => true, 'nullable' => false ],
+            'email'     => [ 'type' => 'string', 'required' => true, 'nullable' => false ],
+            'password'  => [ 'type' => 'string', 'required' => true, 'nullable' => false ],
+        ];
+
+        $requestBody = json_decode($request->getContent());
+
+        if($this->validateJsonRequestBody($requestBody, $parameters))
+            return $this->validateJsonRequestBody($requestBody, $parameters);
+
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $requestBody->email]);
+        if($user)
+            return $this->json([
+                'status' => false,
+                'message' => "Email já registrado nos sistema",
+            ], 400);
+
+        $user = $entityManager->getRepository(User::class)->findOneBy(['username' => $requestBody->username]);
+        if($user)
+            return $this->json([
+                'status' => false,
+                'message' => "Nome de usuário indisponível",
+            ],400);
 
         $user = new User();
 
-        $user->setUsername($username);
-        $user->setEmail($email);
-        $user->setPassword($passwordHasher->hashPassword($user, $plaintextPassword));
+
+        $user->setUsername($requestBody->username);
+        $user->setEmail($requestBody->email);
+        $user->setPassword($passwordHasher->hashPassword($user, $requestBody->password));
+
+        $defaultGroup = $entityManager->getRepository(Group::class)->findOneBy(['id'=> 1]);
+        $user->setGroups([$defaultGroup]);
 
         $entityManager->persist($user);
         $entityManager->flush();
 
-        return $this->json('Created new {user} successfully with id ' . $user->getId());
+        return $this->json([
+            'status' => true,
+            'message' => "Registro efetuado com sucesso!",
+        ]);
     }
 
     #[OA\Tag(name: 'user')]

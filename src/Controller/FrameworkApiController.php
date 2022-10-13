@@ -55,9 +55,10 @@ class FrameworkApiController extends DefaultAbstractController
     )]
     #[ARR(routerName: 'listAction', role: "ROLE_API_FRAMEWORK_LIST", title: 'Listar')]
     #[Route('', name: 'list', methods: ['GET'])]
+    ##[IsGranted("ROLE_API_FRAMEWORK_LIST")]
     public function listAction(ManagerRegistry $doctrine): Response
     {
-        //$this->validateAccess("ROLE_API_FRAMEWORK_LIST");
+        $this->validateAccess("ROLE_API_FRAMEWORK_LIST");
         $objectData = $doctrine->getRepository( $this->getRepository() )->findAll();
 
 
