@@ -40,7 +40,6 @@ class ApplicationApiController extends DefaultAbstractController
         return Application::class;
     }
 
-
     /** @throws ExceptionInterface */
     #[OA\Response(
         response: 200,
@@ -101,10 +100,6 @@ class ApplicationApiController extends DefaultAbstractController
         }
         return $this->json($responseData);
     }
-
-
-
-
 
     #[OA\RequestBody(
         description: 'Json Payload',
@@ -198,6 +193,8 @@ class ApplicationApiController extends DefaultAbstractController
                 'message' => "Aplicação não encontrada.",
             ], 404);
 
+
+
         $serializer = new Serializer([new ObjectNormalizer()]);
         $response = $serializer->normalize($objectData, null, [
             AbstractNormalizer::ATTRIBUTES => [
@@ -207,7 +204,8 @@ class ApplicationApiController extends DefaultAbstractController
                 'diagram'=>[
                     'id',
                     'name',
-                    'description'
+                    'description',
+                    'structure'
                 ],
                 'framework'=>[
                     'id',
