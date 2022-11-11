@@ -193,8 +193,6 @@ class ApplicationApiController extends DefaultAbstractController
                 'message' => "Aplicação não encontrada.",
             ], 404);
 
-
-
         $serializer = new Serializer([new ObjectNormalizer()]);
         $response = $serializer->normalize($objectData, null, [
             AbstractNormalizer::ATTRIBUTES => [
@@ -225,7 +223,6 @@ class ApplicationApiController extends DefaultAbstractController
 
         return $this->json($response);
     }
-
 
     #[OA\RequestBody(
         description: 'Json Payload',
@@ -295,8 +292,6 @@ class ApplicationApiController extends DefaultAbstractController
 
 
 
-
-
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     #[ARR(routerName: 'deleteAction', role: "ROLE_API_APPLICATION_DELETE", title: 'Deletar')]
     public function deleteAction(ManagerRegistry $doctrine, int $id): Response
@@ -332,6 +327,7 @@ class ApplicationApiController extends DefaultAbstractController
         $this->validateAccess("ROLE_API_APPLICATION_GENERATE");
         $user = $this->getUser();
 
+        /** @var Application */
         $objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => $user]);
 
         if (!$objectData)
@@ -341,10 +337,39 @@ class ApplicationApiController extends DefaultAbstractController
             ], 404);
 
 
+        $response = [
+            'user '=> [
+                'id' => $user->getId(),
+                'name' => $user->getUsername(),
+                'email' => $user->getEmail(),
+            ],
+            'app' => [
+                'id' => $objectData->getId(),
+                'name' => $objectData->getName(),
+                'description' => $objectData->getDescription(),
+                'programmingLanguage' => $objectData->getFramework()->getProgrammingLanguage()->getName(),
+                'framework' => $objectData->getFramework()->getName(),
+
+                'diagram' => [
+                    'id' => $objectData->getDiagram()->getId(),
+                    'name' => $objectData->getDiagram()->getName(),
+                    //'structure' => json_decode( $objectData->getDiagram()->getStructure() ),
+                ]
+            ],
+
+        ];
+
+
+        return $this->json($response, 200);
+
         return $this->json([
             'status' => true,
             'message' => "Sua aplicação está sendo gerada!",
         ], 200);
+
+
+
+
     }
 
 

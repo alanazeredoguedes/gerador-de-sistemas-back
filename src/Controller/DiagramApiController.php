@@ -56,7 +56,6 @@ class DiagramApiController extends DefaultAbstractController
 
         $user = $this->getUser();
 
-
         $objectData = $doctrine->getRepository( $this->getRepository() )->findBy(['user' => $user]);
 
         $serializer = new Serializer([new ObjectNormalizer()]);
@@ -103,6 +102,8 @@ class DiagramApiController extends DefaultAbstractController
             'structure'    => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
         ];
 
+        $baseStructure = json_encode( $this->createBaseStructure() );
+
         $requestBody = json_decode($request->getContent());
 
         if($this->validateJsonRequestBody($requestBody, $parameters))
@@ -117,8 +118,8 @@ class DiagramApiController extends DefaultAbstractController
         if(property_exists($requestBody, 'description'))
             $data->setDescription($requestBody->description);
 
-        if(property_exists($requestBody, 'structure'))
-            $data->setStructure($requestBody->structure);
+        //if(property_exists($requestBody, 'structure'))
+            $data->setStructure($baseStructure);
 
 
         $data->setUser($user);
@@ -174,6 +175,10 @@ class DiagramApiController extends DefaultAbstractController
                 'logo'
             ]
         ]);
+
+        //$baseStructure = json_encode( $this->createBaseStructure() );
+
+        //$response['structure'] = $baseStructure;
 
         return $this->json($response);
     }
@@ -274,5 +279,152 @@ class DiagramApiController extends DefaultAbstractController
             'message' => 'Diagrama removido com sucesso ',
         ]);
     }
+
+
+
+
+
+
+    public function createBaseStructure()
+    {
+
+
+
+
+
+        return
+            [
+                "class" => [
+                    $this->createClass(
+                        key: '1', location: '-498 -25', associativeModel: false, systemModel: true,
+                        className: 'Media (Sistema)', tableName: 'media', description: 'Classe de Media',
+                        attributes: [
+                            $this->createAttribute(
+                                key: '1', ico: 'pk', attributeName: 'id', fieldName: '', type: 'int', primaryKey: true, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '2', ico: '', attributeName: 'name', fieldName: '', type: 'string', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '3', ico: '', attributeName: 'description', fieldName: '', type: 'text', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '4', ico: '', attributeName: 'enabled', fieldName: '', type: 'int', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                        ],
+                        methods: []
+                    ),
+                    $this->createClass(
+                        key: '2', location: '-504 202', associativeModel: false, systemModel: true,
+                        className: 'Galeria (Sistema)', tableName: 'galeria', description: 'Classe de Galeria de Medias',
+                        attributes: [
+                            $this->createAttribute(
+                                key: '1', ico: 'pk', attributeName: 'id', fieldName: '', type: 'int', primaryKey: true, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '2', ico: '', attributeName: 'name', fieldName: '', type: 'string', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '3', ico: '', attributeName: 'enabled', fieldName: '', type: 'int', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                        ],
+                        methods: []
+                    ),
+                    $this->createClass(
+                        key: '3', location: '-924 85', associativeModel: true, systemModel: true,
+                        className: 'media_galeria (Sistema)', tableName: 'media_galeria (Sistema)', description: 'Medias em Galeria',
+                        attributes: [
+                            $this->createAttribute(
+                                key: '1', ico: 'fk', attributeName: 'media_id', fieldName: '', type: 'int', primaryKey: false, foreingKey: true, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '2', ico: 'fk', attributeName: 'galeria_id', fieldName: '', type: 'int', primaryKey: false, foreingKey: true, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '3', ico: '', attributeName: 'position', fieldName: '', type: 'int', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                            $this->createAttribute(
+                                key: '4', ico: '', attributeName: 'enabled', fieldName: '', type: 'int', primaryKey: false, foreingKey: false, autoGenerate: true,
+                                nullable: false, unique: true, defaultValue: '', precision: 0.0, scale: 0.0, lengthMax: 0, lengthMin: 0
+                            ),
+                        ],
+                        methods: []
+                    ),
+
+                ], // End Class
+
+                "relationships" => [
+                    $this->createRelationship(from: '1', to: '3', typeRelationship: 'one-to-many', attributeTo: '', attributeFromField: ''),
+                    $this->createRelationship(from: '2', to: '3', typeRelationship: 'one-to-many', attributeTo: '', attributeFromField: ''),
+                ]
+            ];
+    }
+
+
+    public function createRelationship(string $from, string $to, string $typeRelationship, string $attributeTo = '', string $attributeFromField = '' )
+    {
+        return [
+            "from" => $from,
+            "to" => $to,
+            "attributeTo" => $attributeTo,
+            "attributeFromField" => $attributeFromField,
+            "typeRelationship" => $typeRelationship,
+        ];
+
+    }
+
+    public function createClass(string $key, string $location, bool $associativeModel, bool $systemModel, string $className, string $tableName, string $description, array $attributes, array $methods): array
+    {
+        return [
+            "key" => $key,
+            "location" => $location,
+            "associativeModel" => $associativeModel,
+            "systemModel" => $systemModel,
+            "className" => $className,
+            "tableName" => $tableName,
+            "description" => $description,
+            "attributes" => $attributes,
+            "methods" => $methods,
+        ];
+    }
+
+
+
+    public function createAttribute(
+        string $key, string $ico, string $attributeName, string $fieldName, string $type, bool $primaryKey,
+        bool $foreingKey, bool $autoGenerate, bool  $nullable, bool $unique, string $defaultValue, float $precision,
+        float $scale, int $lengthMax, int $lengthMin  ): array
+    {
+        return [
+            "key" => $key,
+            "ico" => $ico,
+
+            "attributeName" => $attributeName,
+            "fieldName" => $fieldName,
+            "type" => $type,
+
+            "primaryKey" => $primaryKey,
+            "foreingKey" => $foreingKey,
+            "autoGenerate" => $autoGenerate,
+            "nullable" => $nullable,
+            "unique" => $unique,
+            "defaultValue" => $defaultValue,
+            "precision" => $precision,
+            "scale" => $scale,
+            "lengthMax" => $lengthMax,
+            "lengthMin" => $lengthMin,
+        ];
+    }
+
 
 }

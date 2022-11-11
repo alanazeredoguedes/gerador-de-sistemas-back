@@ -38,16 +38,12 @@ services:
     container_name: nginx-gerador-de-sistemas-back
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "9001:80"
     volumes:
       - ./:/var/www
       - ./docker/nginx:/etc/nginx/conf.d
     networks:
       - project-network
-
-
-
-
 
 
 networks:
