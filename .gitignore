@@ -21,7 +21,7 @@
 ###> jwt/keys ###
 
 public/upload
-public/uploads
+#public/uploads
 public/bundles
 
 .idea
