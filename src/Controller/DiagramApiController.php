@@ -109,7 +109,6 @@ class DiagramApiController extends DefaultAbstractController
         if($this->validateJsonRequestBody($requestBody, $parameters))
             return $this->validateJsonRequestBody($requestBody, $parameters);
 
-
         $data = new Diagram();
 
         if(property_exists($requestBody, 'name'))

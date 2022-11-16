@@ -324,11 +324,12 @@ class ApplicationApiController extends DefaultAbstractController
     #[ARR(routerName: 'generateApplication', role: "ROLE_API_APPLICATION_GENERATE", title: 'Gerar Aplicação')]
     public function generateApplicationAction(ManagerRegistry $doctrine, int $id): Response
     {
-        $this->validateAccess("ROLE_API_APPLICATION_GENERATE");
-        $user = $this->getUser();
+        //$this->validateAccess("ROLE_API_APPLICATION_GENERATE");
+        //$user = $this->getUser();
 
         /** @var Application */
-        $objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => $user]);
+        //$objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => $user]);
+        $objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => 1]);
 
         if (!$objectData)
             return $this->json([
@@ -338,11 +339,11 @@ class ApplicationApiController extends DefaultAbstractController
 
 
         $response = [
-            'user '=> [
+            /*'user '=> [
                 'id' => $user->getId(),
                 'name' => $user->getUsername(),
                 'email' => $user->getEmail(),
-            ],
+            ],*/
             'app' => [
                 'id' => $objectData->getId(),
                 'name' => $objectData->getName(),
@@ -360,15 +361,44 @@ class ApplicationApiController extends DefaultAbstractController
         ];
 
 
-        return $this->json($response, 200);
+        $response = $this->sendSNS( json_encode($response) );
+
+        return $this->json($response);
+
+       // return $this->json($response, 200);
+
+
 
         return $this->json([
             'status' => true,
             'message' => "Sua aplicação está sendo gerada!",
         ], 200);
+    }
 
 
 
+    public function sendSNS($message): array|\Aws\Result
+    {
+
+        $client = new \Aws\Sns\SnsClient([
+            'profile' => 'default',
+            'region' => 'us-east-1',
+            'version' => '2010-03-31'
+        ]);
+
+        $topic = 'arn:aws:sns:us-east-1:538747456615:notifyGenerator';
+
+        try {
+            $result = $client->publish([
+                'Message' => $message,
+                'TopicArn' => $topic,
+            ]);
+
+            return $result;
+
+        } catch (\Aws\Exception\AwsException $e) {
+            return ['error'];
+        }
 
     }
 
