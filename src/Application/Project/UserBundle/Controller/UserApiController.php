@@ -206,7 +206,7 @@ class UserApiController extends DefaultAbstractController
         $user = new User();
 
 
-        $user->setUsername($requestBody->username);
+        $user->setUsername(trim($requestBody->username));
         $user->setEmail($requestBody->email);
         $user->setPassword($passwordHasher->hashPassword($user, $requestBody->password));
 

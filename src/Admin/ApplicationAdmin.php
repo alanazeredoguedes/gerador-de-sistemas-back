@@ -16,6 +16,7 @@ use Sonata\AdminBundle\Form\Type\ModelType;
 use Sonata\AdminBundle\Route\RouteCollectionInterface;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
@@ -71,6 +72,19 @@ final class ApplicationAdmin extends AbstractAdmin
             'btn_add' => false,
             'multiple' => false,
         ]);
+        $form->add('lastGenerate', DateTimeType::class, [
+            'label' => 'Ultima Vez Gerado',
+            'required' => false,
+        ]);
+        $form->add('url', TextType::class, [
+            'label' => 'Url Gerada',
+            'required' => false,
+        ]);
+        $form->add('repository', TextType::class, [
+            'label' => 'Repositorio Gerado',
+            'required' => false,
+        ]);
+
     }
 
     protected function configureDatagridFilters(DatagridMapper $datagrid): void
@@ -85,9 +99,9 @@ final class ApplicationAdmin extends AbstractAdmin
             'label' => 'Nome Aplicação',
             'route' => ['name' => 'edit']
         ]);
-        $list->addIdentifier('description',null,[
+        /*$list->addIdentifier('description',null,[
             'label' => 'Descrição',
-        ]);
+        ]);*/
         $list->addIdentifier('user',null,[
             'associated_property' => 'username',
             'label' => 'Usuário',
@@ -108,6 +122,11 @@ final class ApplicationAdmin extends AbstractAdmin
             'label' => 'Linguagem de Programação',
         ]);
 
+        $list->add('lastGenerate', null, [
+            'label' => 'Ultima vez gerado em:',
+            'route' => ['name' => 'edit']
+        ]);
+
         $list->add(ListMapper::NAME_ACTIONS, ListMapper::TYPE_ACTIONS, [
             'actions' => [
                 'show' => [],
@@ -125,5 +144,9 @@ final class ApplicationAdmin extends AbstractAdmin
             'associated_property' => 'username',
             'label' => 'Usuário',
         ]);
+        $show->add('lastGenerate');
+        $show->add('url');
+        $show->add('repository');
+
     }
 }

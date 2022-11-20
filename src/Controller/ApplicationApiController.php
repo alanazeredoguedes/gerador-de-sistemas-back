@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Application\Project\ContentBundle\Attributes\ARR;
 use App\Application\Project\ContentBundle\Controller\DefaultAbstractController;
+use App\Application\Project\ContentBundle\Helper\AwsHelper\AwsHelper;
 use App\Entity\Application;
 use App\Entity\Diagram;
 use App\Entity\Framework;
@@ -199,6 +200,10 @@ class ApplicationApiController extends DefaultAbstractController
                 'id',
                 'name',
                 'description',
+                'url',
+                'accessEmail',
+                'accessPassword',
+                'repository',
                 'diagram'=>[
                     'id',
                     'name',
@@ -223,6 +228,7 @@ class ApplicationApiController extends DefaultAbstractController
 
         return $this->json($response);
     }
+
 
     #[OA\RequestBody(
         description: 'Json Payload',
@@ -291,7 +297,6 @@ class ApplicationApiController extends DefaultAbstractController
 
 
 
-
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     #[ARR(routerName: 'deleteAction', role: "ROLE_API_APPLICATION_DELETE", title: 'Deletar')]
     public function deleteAction(ManagerRegistry $doctrine, int $id): Response
@@ -320,87 +325,125 @@ class ApplicationApiController extends DefaultAbstractController
     }
 
 
+    #[Route('/generate/getInfo', name: 'generate_get_generate_info', methods: ['GET'])]
+    public function getApplicationInfoAction(ManagerRegistry $doctrine): Response
+    {
+        $awsHelper = new AwsHelper();
+        $message = $awsHelper->sqs->getMessageCodeGenetateInfo(true);
+
+        if(!$message['status'])
+            return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
+
+        $data = json_decode($message['message']);
+        $message = json_decode( $data->Message );
+
+
+        $em = $doctrine->getManager();
+        $application = $doctrine->getRepository(Application::class)->find($message->app);
+
+
+        if( $message->repository )
+            $application->setRepository($message->repository);
+
+        if( $message->url )
+            $application->setUrl( $message->url );
+
+
+        if( $message->email )
+            $application->setAccessEmail( $message->email );
+
+
+        if( $message->password )
+            $application->setAccessPassword( $message->password );
+
+
+        if( $message->repository && $message->url )
+            $application->setLastGenerate(null);
+
+
+
+        $em->persist($application);
+        $em->flush();
+
+        return $this->json(['status' => true]);
+    }
+
     #[Route('/generate/{id}', name: 'generate_application', methods: ['GET'])]
     #[ARR(routerName: 'generateApplication', role: "ROLE_API_APPLICATION_GENERATE", title: 'Gerar Aplicação')]
     public function generateApplicationAction(ManagerRegistry $doctrine, int $id): Response
     {
-        //$this->validateAccess("ROLE_API_APPLICATION_GENERATE");
-        //$user = $this->getUser();
+        $this->validateAccess("ROLE_API_APPLICATION_GENERATE");
+        $user = $this->getUser();
 
         /** @var Application */
-        //$objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => $user]);
-        $objectData = $doctrine->getRepository($this->getRepository())->findOneBy(['id' => $id ,'user' => 1]);
+        $application = $doctrine->getRepository(Application::class)->findOneBy(['id' => $id ,'user' => 1]);
 
-        if (!$objectData)
+        if (!$application)
             return $this->json([
                 'status' => false,
                 'message' => "Aplicação não encontrada.",
             ], 404);
 
 
-        $response = [
-            /*'user '=> [
-                'id' => $user->getId(),
-                'name' => $user->getUsername(),
-                'email' => $user->getEmail(),
-            ],*/
-            'app' => [
-                'id' => $objectData->getId(),
-                'name' => $objectData->getName(),
-                'description' => $objectData->getDescription(),
-                'programmingLanguage' => $objectData->getFramework()->getProgrammingLanguage()->getName(),
-                'framework' => $objectData->getFramework()->getName(),
+        /** Espera 10 minutos desde a ultima geração para gerar novo codigo */
+        $dataLastGenerate = $application->getLastGenerate();
+        if($dataLastGenerate){
 
+            $dataLastGenerate->add(new \DateInterval('PT' . 10 . 'M'));
+            $dataLastGenerate->format('Y-m-d H:i');
+
+            if( $dataLastGenerate >= new \DateTime('now') )
+                return $this->json([
+                    'status' => true,
+                    'message'=> 'Sua aplicação já está em processo de geração, aguarde alguns minutos enquanto o processo é finalizado!'
+                ]);
+
+        }
+
+        $response = [
+            'user'=> [
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'email' => $user->getEmail(),
+            ],
+            'app' => [
+                'id' => $application->getId(),
+                'name' => $application->getName(),
+                'description' => $application->getDescription(),
                 'diagram' => [
-                    'id' => $objectData->getDiagram()->getId(),
-                    'name' => $objectData->getDiagram()->getName(),
-                    //'structure' => json_decode( $objectData->getDiagram()->getStructure() ),
-                ]
+                    'id' => $application->getDiagram()->getId(),
+                    'name' => $application->getDiagram()->getName(),
+                    'structure' => json_decode( $application->getDiagram()->getStructure() ),
+                ],
             ],
 
         ];
 
+        $awsHelper = new AwsHelper();
+        $awsHelper->sns->sentToNotifyGenerator(json_encode($response));
 
-        $response = $this->sendSNS( json_encode($response) );
 
-        return $this->json($response);
+        $application->setLastGenerate(new \DateTime('now'));
+        $application->setUrl(null);
+        $application->setRepository(null);
 
-       // return $this->json($response, 200);
-
+        $doctrine->getManager()->persist($application);
+        $doctrine->getManager()->flush();
 
 
         return $this->json([
             'status' => true,
-            'message' => "Sua aplicação está sendo gerada!",
-        ], 200);
-    }
-
-
-
-    public function sendSNS($message): array|\Aws\Result
-    {
-
-        $client = new \Aws\Sns\SnsClient([
-            'profile' => 'default',
-            'region' => 'us-east-1',
-            'version' => '2010-03-31'
+            'message' => "Começamos a gerar sua aplicação, em alguns minutos finalizaremos os procedimentos!",
         ]);
-
-        $topic = 'arn:aws:sns:us-east-1:538747456615:notifyGenerator';
-
-        try {
-            $result = $client->publish([
-                'Message' => $message,
-                'TopicArn' => $topic,
-            ]);
-
-            return $result;
-
-        } catch (\Aws\Exception\AwsException $e) {
-            return ['error'];
-        }
-
     }
+
+
+
+
+
+
+
+
 
 
 }
