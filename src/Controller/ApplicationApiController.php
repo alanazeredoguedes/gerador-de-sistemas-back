@@ -331,21 +331,27 @@ class ApplicationApiController extends DefaultAbstractController
         $awsHelper = new AwsHelper();
 
         $content =  json_decode( $request->getContent() );
-        $token = $content->Token;
-        $topic = $content->TopicArn;
-        $awsHelper->sns->confirmSubscribe($token, $topic);
-
-
-
+        if(isset($content) && isset($content->Type)){
+            if($content->Type === "SubscriptionConfirmation"){
+                $token = $content->Token;
+                $topic = $content->TopicArn;
+                $awsHelper->sns->confirmSubscribe($token, $topic);
+            }
+        }
 
 
         $message = $awsHelper->sqs->getMessageCodeGenetateInfo(true);
+        if(!$message)
+            return $this->json(['status' => false, 'message' => 'Sem dados a processar!']);
+
 
         if(!$message['status'])
             return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
 
         $data = json_decode($message['message']);
         $message = json_decode( $data->Message );
+
+
 
 
         $em = $doctrine->getManager();
