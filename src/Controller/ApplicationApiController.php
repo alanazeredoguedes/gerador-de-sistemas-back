@@ -325,10 +325,20 @@ class ApplicationApiController extends DefaultAbstractController
     }
 
 
-    #[Route('/generate/getInfo', name: 'generate_get_generate_info', methods: ['GET'])]
-    public function getApplicationInfoAction(ManagerRegistry $doctrine): Response
+    #[Route('/generate/getInfo', name: 'generate_get_generate_info', methods: ['GET', 'POST'])]
+    public function getApplicationInfoAction(ManagerRegistry $doctrine, Request $request): Response
     {
         $awsHelper = new AwsHelper();
+
+        $content =  json_decode( $request->getContent() );
+        $token = $content->Token;
+        $topic = $content->TopicArn;
+        $awsHelper->sns->confirmSubscribe($token, $topic);
+
+
+
+
+
         $message = $awsHelper->sqs->getMessageCodeGenetateInfo(true);
 
         if(!$message['status'])

@@ -21,6 +21,17 @@ class Sns
     }
 
 
+    public function confirmSubscribe(string $token, string $topicArn)
+    {
+        $this->client->confirmSubscription([
+           'Token' => $token,
+           'TopicArn' => $topicArn,
+        ]);
+    }
+
+
+
+
     public function sentToNotifyGenerator($message): bool
     {
         $topic = 'arn:aws:sns:us-east-1:538747456615:notifyGenerator';
