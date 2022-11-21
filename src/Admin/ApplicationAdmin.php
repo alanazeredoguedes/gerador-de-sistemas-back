@@ -17,6 +17,7 @@ use Sonata\AdminBundle\Route\RouteCollectionInterface;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
@@ -82,6 +83,15 @@ final class ApplicationAdmin extends AbstractAdmin
         ]);
         $form->add('repository', TextType::class, [
             'label' => 'Repositorio Gerado',
+            'required' => false,
+        ]);
+
+        $form->add('accessEmail', TextType::class, [
+            'label' => 'Email para acesso',
+            'required' => false,
+        ]);
+        $form->add('accessPassword', PasswordType::class, [
+            'label' => 'Senha para acesso',
             'required' => false,
         ]);
 
