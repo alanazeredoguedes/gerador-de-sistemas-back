@@ -31,6 +31,10 @@ class Diagram
     #[ORM\OneToMany(mappedBy: "diagram", targetEntity: "App\Entity\Application")]
     private mixed $application;
 
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $isTemplate = null;
+
+
     public function __construct()
     {
         $this->application = new ArrayCollection();
@@ -122,6 +126,17 @@ class Diagram
     public function setApplication(mixed $application): void
     {
         $this->application = $application;
+    }
+
+    public function getIsTemplate(): ?bool
+    {
+        return $this->isTemplate;
+    }
+
+
+    public function setIsTemplate(?bool $isTemplate): void
+    {
+        $this->isTemplate = $isTemplate;
     }
 
 

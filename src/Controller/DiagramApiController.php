@@ -48,6 +48,47 @@ class DiagramApiController extends DefaultAbstractController
             type: 'object'
         )
     )]
+    #[Route('/listTemplates', name: 'list_template', methods: ['GET'])]
+    public function listTemplatesAction(ManagerRegistry $doctrine): Response
+    {
+        $this->validateAccess("ROLE_API_DIAGRAM_LIST");
+
+        $user = $this->getUser();
+
+        $objectData = $doctrine->getRepository( Diagram::class )->findBy(['isTemplate' => true]);
+
+        $serializer = new Serializer([new ObjectNormalizer()]);
+        $response = $serializer->normalize($objectData, null, [
+            AbstractNormalizer::ATTRIBUTES => [
+                'id',
+                'name',
+                'description',
+                'structure',
+            ],
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'user',
+                'application',
+                'structure',
+            ]
+        ]);
+
+        return $this->json($response);
+    }
+
+    /** @throws ExceptionInterface */
+    #[OA\Response(
+        response: 200,
+        description: 'Return data list',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'id', type: 'int'),
+                new OA\Property(property: 'name', type: 'string'),
+                new OA\Property(property: 'description', type: 'string'),
+                new OA\Property(property: 'structure', type: 'string'),
+            ],
+            type: 'object'
+        )
+    )]
     #[ARR(routerName: 'listAction', role: "ROLE_API_DIAGRAM_LIST", title: 'Listar')]
     #[Route('', name: 'list', methods: ['GET'])]
     public function listAction(ManagerRegistry $doctrine): Response
@@ -75,12 +116,17 @@ class DiagramApiController extends DefaultAbstractController
         return $this->json($response);
     }
 
+
+
+
+
     #[OA\RequestBody(
         description: 'Json Payload',
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'name', type: 'string', nullable: false),
                 new OA\Property(property: 'description', type: 'string', nullable: false),
+                new OA\Property(property: 'diagram', type: 'int', nullable: false),
                 new OA\Property(property: 'structure',  type: 'string', nullable: false),
             ],
             type: 'object'
@@ -100,6 +146,7 @@ class DiagramApiController extends DefaultAbstractController
             'name'         => [ 'type' => 'string', 'required' => true, 'nullable' => false ],
             'description'  => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
             'structure'    => [ 'type' => 'string', 'required' => false, 'nullable' => true ],
+            //'diagram'      => [ 'type' => 'integer', 'required' => true, 'nullable' => true ],
         ];
 
         $requestBody = json_decode($request->getContent());
@@ -115,8 +162,20 @@ class DiagramApiController extends DefaultAbstractController
         if(property_exists($requestBody, 'description'))
             $data->setDescription($requestBody->description);
 
-        if(property_exists($requestBody, 'structure'))
+
+
+        if($requestBody->diagram !== 0){
+            $diagram = $entityManager->getRepository(Diagram::class)->find($requestBody->diagram);
+            if($diagram){
+                $data->setStructure($diagram->getStructure());
+            }else{
+                $data->setStructure($requestBody->structure);
+            }
+        }else{
             $data->setStructure($requestBody->structure);
+        }
+
+
             /*$data->setStructure(json_encode([
                 'class' => [],
                 'relationships' => []
