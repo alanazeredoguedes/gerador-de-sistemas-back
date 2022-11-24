@@ -3,9 +3,6 @@ version: "3.7"
 services:
   app:
     build:
-      #args:
-      #  user: sammy
-      #  uid: 1000
       context: ./docker/php/
       dockerfile: Dockerfile
     image: app-php81
@@ -17,27 +14,12 @@ services:
     networks:
       - project-network
 
-#  db:
-#    image: mysql:8.0
-#    container_name: project-db
-#    restart: unless-stopped
-#    environment:
-#      MYSQL_DATABASE: ${DB_DATABASE}
-#      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-#      MYSQL_PASSWORD: ${DB_PASSWORD}
-#      MYSQL_USER: ${DB_USERNAME}
-#      SERVICE_NAME: mysql
-#    #volumes:
-#    #  - ./docker-compose/mysql:/docker-entrypoint-initdb.d
-#    networks:
-#      - project-network
-
   nginx:
     image: nginx:1.17-alpine
     container_name: nginx-gerador-de-sistemas-back
-    restart: unless-stopped
+    restart: always
     ports:
-      - "8080:80"
+      - "80:80"
       #- "9001:80"
     volumes:
       - ./:/var/www

@@ -403,7 +403,7 @@ class ApplicationApiController extends DefaultAbstractController
 
         /** Espera 10 minutos desde a ultima geração para gerar novo codigo */
         $dataLastGenerate = $application->getLastGenerate();
-        if($dataLastGenerate){
+        /*if($dataLastGenerate){
 
             $dataLastGenerate->add(new \DateInterval('PT' . 10 . 'M'));
             $dataLastGenerate->format('Y-m-d H:i');
@@ -414,7 +414,7 @@ class ApplicationApiController extends DefaultAbstractController
                     'message'=> 'Sua aplicação já está em processo de geração, aguarde alguns minutos enquanto o processo é finalizado!'
                 ]);
 
-        }
+        }*/
 
         $response = [
             'user'=> [
@@ -438,14 +438,14 @@ class ApplicationApiController extends DefaultAbstractController
         $awsHelper = new AwsHelper();
         $awsHelper->sns->sentToNotifyGenerator(json_encode($response));
 
-
         $application->setLastGenerate(new \DateTime('now'));
         $application->setUrl(null);
         $application->setRepository(null);
+        $application->setAccessEmail(null);
+        $application->setAccessPassword(null);
 
         $doctrine->getManager()->persist($application);
         $doctrine->getManager()->flush();
-
 
         return $this->json([
             'status' => true,
