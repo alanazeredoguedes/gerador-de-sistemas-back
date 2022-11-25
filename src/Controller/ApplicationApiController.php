@@ -338,10 +338,10 @@ class ApplicationApiController extends DefaultAbstractController
 
         $message = $message->message;
 
-        if( !property_exists($message, 'repository') || $message->repository )
-            return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
-
-
+/*        if( !property_exists($message, 'client') || $message->client ||
+            !property_exists($message, 'app') || $message->app ||
+            !property_exists($message, 'repository') || $message->repository )
+            return $this->json(['status' => false, 'message' => 'Sem dados para processar2!' ]);*/
 
         $em = $doctrine->getManager();
         $application = $doctrine->getRepository(Application::class)->find($message->app);
@@ -366,12 +366,14 @@ class ApplicationApiController extends DefaultAbstractController
 
         $message = $message->message;
 
-        if( !property_exists($message, 'url') || $message->url ||
+/*        if( !property_exists($message, 'client') || $message->client ||
+            !property_exists($message, 'app') || $message->app ||
+            !property_exists($message, 'url') || $message->url ||
             !property_exists($message, 'email') || $message->email ||
             !property_exists($message, 'password') || $message->password
         ){
             return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
-        }
+        }*/
 
         $em = $doctrine->getManager();
 
