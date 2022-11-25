@@ -18,7 +18,7 @@ class Ec2
         $this->scriptUserData = file_get_contents( $this->projectDir. '/src/Application/Generator/GeneratorBundle/AwsHelper/Aws/script.txt');
 
         $this->client = new Ec2Client([
-            'region' => 'us-east-1',
+            'region' => 'sa-east-1',
             'version' => '2016-11-15',
             'credentials' => $credentials,
         ]);

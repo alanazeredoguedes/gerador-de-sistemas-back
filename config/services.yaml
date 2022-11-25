@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     locale: 'pt_BR'
+    aws.key: '%env(AWS_KEY)%'
+    aws.secret: '%env(AWS_SECRET)%'
 
 services:
     # default configuration for services in *this* file
@@ -20,8 +22,6 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-
 
 
 

@@ -325,64 +325,69 @@ class ApplicationApiController extends DefaultAbstractController
     }
 
 
-    #[Route('/generate/getInfo', name: 'generate_get_generate_info', methods: ['GET', 'POST'])]
-    public function getApplicationInfoAction(ManagerRegistry $doctrine, Request $request): Response
+    #[Route('/generate/getRepository', name: 'generate_get_generate_repository', methods: ['GET', 'POST'])]
+    public function getApplicationRepositoryAction(ManagerRegistry $doctrine, Request $request): Response
     {
-        $awsHelper = new AwsHelper();
 
-        $content =  json_decode( $request->getContent() );
-        if(isset($content) && isset($content->Type)){
-            if($content->Type === "SubscriptionConfirmation"){
-                $token = $content->Token;
-                $topic = $content->TopicArn;
-                $awsHelper->sns->confirmSubscribe($token, $topic);
-            }
-        }
+        $this->awsHelper->sns->confirmSubscribe($request);
 
+        $message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoRepositorio();
 
-        $message = $awsHelper->sqs->getMessageCodeGenetateInfo(true);
-        if(!$message)
-            return $this->json(['status' => false, 'message' => 'Sem dados a processar!']);
-
-
-        if(!$message['status'])
+        if(!$message->status)
             return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
 
-        $data = json_decode($message['message']);
-        $message = json_decode( $data->Message );
+        $message = $message->message;
 
+        if( !property_exists($message, 'repository') || $message->repository )
+            return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
 
 
 
         $em = $doctrine->getManager();
         $application = $doctrine->getRepository(Application::class)->find($message->app);
 
-
-        if( $message->repository )
-            $application->setRepository($message->repository);
-
-        if( $message->url )
-            $application->setUrl( $message->url );
-
-
-        if( $message->email )
-            $application->setAccessEmail( $message->email );
-
-
-        if( $message->password )
-            $application->setAccessPassword( $message->password );
-
-
-        if( $message->repository && $message->url )
-            $application->setLastGenerate(null);
-
-
+        $application->setRepository($message->repository);
 
         $em->persist($application);
         $em->flush();
 
         return $this->json(['status' => true]);
     }
+
+    #[Route('/generate/getServer', name: 'generate_get_generate_server', methods: ['GET', 'POST'])]
+    public function getApplicationServerAction(ManagerRegistry $doctrine, Request $request): Response
+    {
+        $this->awsHelper->sns->confirmSubscribe($request);
+
+        $message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoServidor();
+
+        if(!$message->status)
+            return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
+
+        $message = $message->message;
+
+        if( !property_exists($message, 'url') || $message->url ||
+            !property_exists($message, 'email') || $message->email ||
+            !property_exists($message, 'password') || $message->password
+        ){
+            return $this->json(['status' => false, 'message' => 'Sem dados para processar!' ]);
+        }
+
+        $em = $doctrine->getManager();
+
+        $application = $doctrine->getRepository(Application::class)->find($message->app);
+        $application->setUrl( $message->url );
+        $application->setAccessEmail( $message->email );
+        $application->setAccessPassword( $message->password );
+        $application->setLastGenerate(null);
+
+        $em->persist($application);
+        $em->flush();
+
+        return $this->json(['status' => true]);
+    }
+
+
 
     #[Route('/generate/{id}', name: 'generate_application', methods: ['GET'])]
     #[ARR(routerName: 'generateApplication', role: "ROLE_API_APPLICATION_GENERATE", title: 'Gerar Aplicação')]
@@ -400,8 +405,7 @@ class ApplicationApiController extends DefaultAbstractController
                 'message' => "Aplicação não encontrada.",
             ], 404);
 
-
-        /** Espera 10 minutos desde a ultima geração para gerar novo codigo */
+        /** Verifica se ja pode estar criando nova aplicação */
         $dataLastGenerate = $application->getLastGenerate();
         /*if($dataLastGenerate){
 
@@ -415,6 +419,7 @@ class ApplicationApiController extends DefaultAbstractController
                 ]);
 
         }*/
+
 
         $response = [
             'user'=> [
@@ -435,8 +440,14 @@ class ApplicationApiController extends DefaultAbstractController
 
         ];
 
-        $awsHelper = new AwsHelper();
-        $awsHelper->sns->sentToNotifyGenerator(json_encode($response));
+        /** Envia para topico SNS que está vinculado a fila */
+        $status = $this->awsHelper->sns->sendMessageGdsGerarSistema(json_encode($response));
+        if(!$status)
+            return $this->json([
+                'status' => false,
+                'message' => "Não foi possível gerar sua aplicação no momento, tente em outro momento!",
+            ], 404);
+
 
         $application->setLastGenerate(new \DateTime('now'));
         $application->setUrl(null);
@@ -453,13 +464,26 @@ class ApplicationApiController extends DefaultAbstractController
         ]);
     }
 
+ /*   #[Route('/aws/testesns', name: 'testesns', methods: ['GET'])]
+    public function testesns(): Response
+    {
 
+        $status = $this->awsHelper->sns->sendMessageGdsGerarSistema(json_encode(['code'=> 'gerar sistema']));
+        //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoRepositorio(json_encode(['code'=> 'sistema gerado repo']));
+        //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoServidor(json_encode(['code'=> 'sistema gerador server']));
 
+        return $this->json($status);
+    }
 
+    #[Route('/aws/testesqs', name: 'testesqs', methods: ['GET'])]
+    public function testesqs(): Response
+    {
 
+        $message = $this->awsHelper->sqs->getMessageGdsGerarSistema();
+        //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoRepositorio();
+        //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoServidor();
 
-
-
-
+        return $this->json($message);
+    }*/
 
 }

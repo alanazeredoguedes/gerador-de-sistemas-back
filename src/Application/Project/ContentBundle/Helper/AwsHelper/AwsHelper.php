@@ -6,6 +6,9 @@ use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\CodeCommit;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Ec2;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Sns;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Sqs;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 class AwsHelper
 {
@@ -16,7 +19,7 @@ class AwsHelper
 
 
     public function __construct(
-        //protected string $projectDir,
+        protected ContainerBagInterface $containerInterface,
     )
     {
 
@@ -39,36 +42,18 @@ class AwsHelper
 
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     protected function getCredentials(): array
     {
         return [
-            'key' => 'REDACTED_AWS_KEY',
-            'secret' => 'No08qKH1ntfsXRO219qtEkUy/NNB8BhbT26af9Cm',
+            'key' => $this->containerInterface->get('aws.key') ?
+                $this->containerInterface->get('aws.key') : '',
+            'secret' => $this->containerInterface->get('aws.secret') ?
+                $this->containerInterface->get('aws.secret') : '',
         ];
     }
-
-
 
 }

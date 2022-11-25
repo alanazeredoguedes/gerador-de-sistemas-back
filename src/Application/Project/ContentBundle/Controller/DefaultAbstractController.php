@@ -2,17 +2,24 @@
 
 namespace App\Application\Project\ContentBundle\Controller;
 
+use App\Application\Project\ContentBundle\Helper\AwsHelper\AwsHelper;
 use Sonata\MediaBundle\Provider\Pool;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
 class DefaultAbstractController extends AbstractController
 {
+    protected AwsHelper $awsHelper;
+
     public function __construct(
-        public Pool $providerPool
-    ) {}
+        public Pool $providerPool,
+        protected ContainerBagInterface $containerInterface,
+    ) {
+        $this->awsHelper = new AwsHelper($this->containerInterface);
+    }
 
     public function getMediaUrl($media) {
         if(!$media)
