@@ -399,7 +399,7 @@ class ApplicationApiController extends DefaultAbstractController
         $user = $this->getUser();
 
         /** @var Application */
-        $application = $doctrine->getRepository(Application::class)->findOneBy(['id' => $id ,'user' => 1]);
+        $application = $doctrine->getRepository(Application::class)->findOneBy(['id' => $id ,'user' => $user]);
 
         if (!$application)
             return $this->json([

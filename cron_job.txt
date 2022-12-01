@@ -1,0 +1,11 @@
+* * * * * (  wget https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+* * * * * ( sleep 10 ; https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+* * * * * ( sleep 20 ; https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+* * * * * ( sleep 30 ; https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+* * * * * ( sleep 40 ; https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+* * * * * ( sleep 50 ; wget https://admin.geradordesistemas.com.br/api/application/generate/getServer )
+
+# https://admin.geradordesistemas.com.br/api/application/generate/getServer
+
+
+
