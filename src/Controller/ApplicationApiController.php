@@ -409,7 +409,7 @@ class ApplicationApiController extends DefaultAbstractController
 
         /** Verifica se ja pode estar criando nova aplicação */
         $dataLastGenerate = $application->getLastGenerate();
-        /*if($dataLastGenerate){
+        if($dataLastGenerate){
 
             $dataLastGenerate->add(new \DateInterval('PT' . 10 . 'M'));
             $dataLastGenerate->format('Y-m-d H:i');
@@ -419,8 +419,7 @@ class ApplicationApiController extends DefaultAbstractController
                     'status' => true,
                     'message'=> 'Sua aplicação já está em processo de geração, aguarde alguns minutos enquanto o processo é finalizado!'
                 ]);
-
-        }*/
+        }
 
 
         $response = [
