@@ -395,8 +395,10 @@ class ApplicationApiController extends DefaultAbstractController
     #[ARR(routerName: 'generateApplication', role: "ROLE_API_APPLICATION_GENERATE", title: 'Gerar Aplicação')]
     public function generateApplicationAction(ManagerRegistry $doctrine, int $id): Response
     {
-        $this->validateAccess("ROLE_API_APPLICATION_GENERATE");
-        $user = $this->getUser();
+        //$this->validateAccess("ROLE_API_APPLICATION_GENERATE");
+        //$user = $this->getUser();
+
+        $user = $doctrine->getRepository(User::class)->find(1);
 
         /** @var Application */
         $application = $doctrine->getRepository(Application::class)->findOneBy(['id' => $id ,'user' => $user]);
@@ -408,7 +410,7 @@ class ApplicationApiController extends DefaultAbstractController
             ], 404);
 
         /** Verifica se ja pode estar criando nova aplicação */
-        $dataLastGenerate = $application->getLastGenerate();
+        /*$dataLastGenerate = $application->getLastGenerate();
         if($dataLastGenerate){
 
             $dataLastGenerate->add(new \DateInterval('PT' . 10 . 'M'));
@@ -419,7 +421,7 @@ class ApplicationApiController extends DefaultAbstractController
                     'status' => true,
                     'message'=> 'Sua aplicação já está em processo de geração, aguarde alguns minutos enquanto o processo é finalizado!'
                 ]);
-        }
+        }*/
 
 
         $response = [
@@ -465,26 +467,36 @@ class ApplicationApiController extends DefaultAbstractController
         ]);
     }
 
- /*   #[Route('/aws/testesns', name: 'testesns', methods: ['GET'])]
-    public function testesns(): Response
-    {
-
-        $status = $this->awsHelper->sns->sendMessageGdsGerarSistema(json_encode(['code'=> 'gerar sistema']));
-        //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoRepositorio(json_encode(['code'=> 'sistema gerado repo']));
-        //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoServidor(json_encode(['code'=> 'sistema gerador server']));
-
-        return $this->json($status);
-    }
-
-    #[Route('/aws/testesqs', name: 'testesqs', methods: ['GET'])]
+    /*#[Route('/aws/email', name: 'email', methods: ['GET'])]
     public function testesqs(): Response
     {
+        $this->awsHelper->ses->sendEmail();
 
-        $message = $this->awsHelper->sqs->getMessageGdsGerarSistema();
-        //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoRepositorio();
-        //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoServidor();
-
-        return $this->json($message);
+        return $this->json('ok');
     }*/
+
+
+        #[Route('/aws/testesns', name: 'testesns', methods: ['GET'])]
+        public function testesns(): Response
+        {
+
+            $status = $this->awsHelper->sns->sendMessageGdsGerarSistema(json_encode(['code'=> 'gerar sistema']));
+            //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoRepositorio(json_encode(['code'=> 'sistema gerado repo']));
+            //$status = $this->awsHelper->sns->sendMessageGdsSistemaGeradoServidor(json_encode(['code'=> 'sistema gerador server']));
+
+            return $this->json($status);
+        }
+
+
+            #[Route('/aws/testesqs', name: 'testesqs', methods: ['GET'])]
+            public function testesqs(): Response
+            {
+
+                $message = $this->awsHelper->sqs->getMessageGdsGerarSistema();
+                //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoRepositorio();
+                //$message = $this->awsHelper->sqs->getMessageGdsSistemaGeradoServidor();
+
+                return $this->json($message);
+            }
 
 }

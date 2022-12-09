@@ -4,6 +4,7 @@ namespace App\Application\Project\ContentBundle\Helper\AwsHelper;
 
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\CodeCommit;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Ec2;
+use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Ses;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Sns;
 use App\Application\Project\ContentBundle\Helper\AwsHelper\Aws\Sqs;
 use Psr\Container\ContainerExceptionInterface;
@@ -16,7 +17,7 @@ class AwsHelper
     public CodeCommit $codeCommit;
     public Sns $sns;
     public Sqs $sqs;
-
+    public Ses $ses;
 
     public function __construct(
         protected ContainerBagInterface $containerInterface,
@@ -37,6 +38,10 @@ class AwsHelper
         );
 
         $this->sqs = new Sqs(
+            credentials: $this->getCredentials(),
+        );
+
+        $this->ses = new Ses(
             credentials: $this->getCredentials(),
         );
 
