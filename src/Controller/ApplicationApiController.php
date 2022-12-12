@@ -395,10 +395,10 @@ class ApplicationApiController extends DefaultAbstractController
     #[ARR(routerName: 'generateApplication', role: "ROLE_API_APPLICATION_GENERATE", title: 'Gerar Aplicação')]
     public function generateApplicationAction(ManagerRegistry $doctrine, int $id): Response
     {
-        //$this->validateAccess("ROLE_API_APPLICATION_GENERATE");
-        //$user = $this->getUser();
+        $this->validateAccess("ROLE_API_APPLICATION_GENERATE");
+        $user = $this->getUser();
 
-        $user = $doctrine->getRepository(User::class)->find(1);
+        //$user = $doctrine->getRepository(User::class)->find(1);
 
         /** @var Application */
         $application = $doctrine->getRepository(Application::class)->findOneBy(['id' => $id ,'user' => $user]);
