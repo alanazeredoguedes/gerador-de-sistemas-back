@@ -1,117 +1,111 @@
-# Gerador de Sistemas - Aplicação BackEnd
+# GDS — Gerador de Sistemas (Backend)
 
-[![php version](https://img.shields.io/badge/php-v8.1-blue?style=flat&logo=php)](php/composer.json#L6)
-[![build Status](https://github.com/ludofleury/blackflag/workflows/ci/badge.svg?branch=main)](https://github.com/ludofleury/blackflag/actions)
-[![codecov](https://codecov.io/gh/ludofleury/blackflag/branch/main/graph/badge.svg?token=u7d7nhlwb8)](https://codecov.io/gh/ludofleury/blackflag)
-[![phpstan](https://img.shields.io/badge/sonata_admin-level%208-brightgreen.svg?style=flat)](CONTRIBUTING.md#phpstan)
-[![psalm](https://img.shields.io/badge/psalm-level%202-brightgreen.svg?style=flat)](CONTRIBUTING.md#psalm)
-[![mutation testing](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fludofleury%2Fblackflag%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/ludofleury/blackflag/main)
+<!-- Após publicação no Zenodo, substituir XXXXXXX pelo ID do DOI:
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+-->
 
+Aplicação backend do **GDS — Gerador de Sistemas**, plataforma de *Model-Driven Development* desenvolvida como Trabalho de Conclusão de Curso em Sistemas de Informação no **Centro Universitário La Salle do Rio de Janeiro (Unilasalle-RJ)**, em 2022.
 
-Provides a framework for implementing a complete web project
+Este repositório contém a **API REST** que recebe as modelagens do frontend, autentica os usuários via JWT, persiste os diagramas objeto-relacionais e aciona o serviço de geração de código.
 
-* PSR-1 & PSR-2
-* Symfony standard
-* Symfony naming conventions
+## Sobre o sistema GDS
 
-Strongly inspired by [OpenSky Symfony2 coding standard](https://github.com/opensky/Symfony2-coding-standard) (forked InterfaceSuffixSniff).
-Yet, this ruleset rely on CodeSniffer PSR-1 & 2 sniffs and add Symfony standard & naming conventions. It's also allow chained calls (fluent interface).
+O GDS recebe a modelagem objeto-relacional de um sistema (classes, atributos, relacionamentos) e gera automaticamente uma aplicação web full-stack com backend PHP/Symfony, API REST documentada, autenticação JWT, painel admin Sonata, container Docker e deploy automatizado em AWS EC2.
 
+O sistema é composto por **quatro componentes**:
 
-## Requirements
-1. Install docker:
+| Componente | Responsabilidade | Repositório |
+|---|---|---|
+| Frontend | Editor visual de diagramas (Vue 3 SPA) | [gerador-de-sistemas-front](https://github.com/alanazeredoguedes/gerador-de-sistemas-front) |
+| **Backend (este repo)** | API REST, autenticação, persistência | — |
+| Code Generator | Motor de geração de código e deploy | [gerador-de-sistemas-code-generator](https://github.com/alanazeredoguedes/gerador-de-sistemas-code-generator) |
+| Base | Template-base Symfony para apps gerados | [gerador-de-sistemas-base](https://github.com/alanazeredoguedes/gerador-de-sistemas-base) |
 
-        docker
-2. Install docker-compose
+## Arquitetura
 
-        docker-compose
-
-
-## Installation
-
-1. Construa a imagem da aplicação com o seguinte comando:
-
-        docker compose build app
-
-2. Execute o ambiente em segundo plano com:
-
-        docker compose up -d
-3. Execute o ambiente em segundo plano com:
-
-         docker compose exec app 
-
-4. Copy, symlink or check out this repo to a folder called Symfony inside the
-   phpcs `Standards` directory:
-
-        cd /path/to/pear/PHP/CodeSniffer/Standards
-        git clone git://github.com/ludofleury/symfony-coding-standard.git Symfony
-
-
-
-## Pragmatic & opinionated Customisations
-
-### Allows fluent-interface chained calls syntax
-
-```php
-<?php
-
-    $this
-        ->getFoo()
-            ->getBar()
-            ->getBar()
-    ; // This is allowed
-
-    $this->getFoo()  ; // This is a violation
-
-?>
+```
+┌─────────────┐        ┌─────────────┐         ┌──────────────────┐
+│ FRONTEND    │  HTTPS │ BACKEND     │ aciona  │ CODE GENERATOR   │
+│ Vue 3 SPA   │ ─────► │ (este repo) │ ──────► │ + AwsHelper      │
+│             │  REST  │ + JWT       │         │ + GitHub deploy  │
+└─────────────┘        └─────────────┘         └────────┬─────────┘
+                                                        │ clona e
+                                                        │ adapta
+                                                        ▼
+                                               ┌──────────────────┐
+                                               │ BASE             │
+                                               │ template Symfony │
+                                               │ + bundles core   │
+                                               └──────────────────┘
 ```
 
-## Known limitations
+## Stack
 
-* "Exception" naming convention isn't enforced (Symfony require Exception suffix)
-* PHPDoc blocks for all classes, methods, and functions isn't enforced at the moment
+- **PHP 8.1**
+- **Symfony 6**
+- **Doctrine ORM**
+- **MySQL**
+- **JWT** (lexik/jwt-authentication-bundle) para autenticação
+- **Sonata Admin** para painel administrativo
+- **Docker** + Docker Compose
 
-## Contributing
+## Entidades principais
 
-If you do contribute code to these sniffs, please make sure it conforms to the PEAR coding standard and that the unit tests still pass.
+- `User`, `Group` — gestão de usuários e grupos (UserBundle)
+- `Application` — aplicação que o usuário deseja gerar
+- `Diagram` — diagrama objeto-relacional vinculado a uma Application
+- `Content` — conteúdo modelado dentro de um diagrama (classes, atributos, relacionamentos)
+- `Framework`, `ProgrammingLanguage` — opções de geração disponíveis
 
-To check the coding standard, run from the Symfony-coding-standard source root:
+## Como executar (local)
 
-        phpcs --ignore=Tests --standard=PEAR . -n
+### Pré-requisitos
 
-The unit-tests are run from within the PHP_CodeSniffer directory
+- Docker e Docker Compose
+- Editor `.env.local` a partir de `.env.base` com seus segredos locais
 
-* get the [CodeSniffer repository](https://github.com/squizlabs/PHP_CodeSniffer)
-* symlink, copy or clone this repository at CodeSniffer/Standard/Symfony
-* from the CodeSniffer repository root run `phpunit --filter Symfony_ tests/AllTests.php`
+### Instalação
 
-## Credit
+```bash
+cp .env.base .env.local
+# editar .env.local: APP_SECRET, DATABASE_URL, JWT_PASSPHRASE etc.
 
-[OpenSky](https://github.com/opensky) for the [Symfony2 coding standard](https://github.com/opensky/Symfony2-coding-standard)
+docker compose build app
+docker compose up -d
+```
 
-## Issue
+### Inicialização do banco
 
-If you spot any missing standard/conventions and don't want to contribute, please open an issue. It will be at least added to this readme.
+```bash
+docker compose exec app bin/console doctrine:schema:update --force
+docker compose exec app bin/console lexik:jwt:generate-keypair
+docker compose exec app bin/console security:hash-password
+```
 
-## Licence
+A API ficará disponível em `http://localhost:9001`.
 
-Copyright (c) 2013 Ludovic Fleury
+### Testes
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is furnished
-to do so, subject to the following conditions:
+```bash
+docker compose exec app vendor/bin/phpunit
+```
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## Como citar
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Se você usar este software em pesquisa, por favor cite-o:
 
+> Guedes, A. A. (2022). *GDS — Gerador de Sistemas: Uma ferramenta de modelagem e geração de sistemas (Backend)*. Trabalho de Conclusão de Curso, Centro Universitário La Salle do Rio de Janeiro. DOI: 10.5281/zenodo.XXXXXXX
+
+Veja também o arquivo [`CITATION.cff`](./CITATION.cff) para metadados estruturados.
+
+## Sobre o TCC
+
+- **Autor:** Alan Azeredo Guedes
+- **Orientador:** Prof. Msc. Mario João Junior
+- **Instituição:** Centro Universitário La Salle do Rio de Janeiro (Unilasalle-RJ)
+- **Curso:** Sistemas de Informação
+- **Defesa:** Dezembro de 2022
+
+## Licença
+
+Distribuído sob a licença **MIT**. Veja [`LICENSE`](./LICENSE) para detalhes.
